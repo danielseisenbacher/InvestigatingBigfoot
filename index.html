@@ -25,17 +25,26 @@
 </head>
     <body>
         <div class="slidecontainer">
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <input type="range" min="0" value="0" id="myRange">
+            <span id="demo"></span>
         </div>
+
         <script>
-            var slider = document.getElementById("myRange");
-            var output = document.getElementById("demo");
-            output.innerHTML = slider.value; // Display the default slider value
+            const years = [2017, 2018, 2020, 2021]; // skip 2019
+
+            const slider = document.getElementById("myRange");
+            const output = document.getElementById("demo");
+
+            // Set the correct max value dynamically
+            slider.max = years.length - 1;
+
+            // Initialize output
+            output.innerHTML = years[slider.value];
 
             // Update the current slider value
-            slider.oninput = function() {
-                output.innerHTML = this.value;
-            }
+            slider.oninput = function () {
+                output.innerHTML = years[this.value];
+            };
         </script>
         <div id="map">
         </div>
@@ -177,7 +186,7 @@
                 },
             });
             var cluster_Sightings_1 = new L.MarkerClusterGroup({
-                showCoverageOnHover: false,
+                showCoverageOnHover: true,
                 spiderfyDistanceMultiplier: 2
             });
             cluster_Sightings_1.addLayer(layer_Sightings_1);
