@@ -1,4 +1,6 @@
 ﻿.slidecontainer {
+  font-family: Verdana, sans-serif;
+  font-size: 11pt;
   position: absolute;
   bottom: 20px;
   left: 50%;
@@ -8,8 +10,49 @@
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;  /* vertically centers all children */
+  gap: 12px;            /* optional spacing between elements */
 }
 
 .slider {
-  width: 90%;
+  width: 100%;
+}
+
+button {
+  padding: 17px 40px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: 0;
+  background-color: white;
+  box-shadow: rgb(0 0 0 / 5%) 0 0 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 15px;
+}
+
+button:hover {
+  background-color: hsl(261deg 80% 48%);
+  color: hsl(0, 0%, 100%);
+}
+
+button.active {
+  background-color: hsl(261deg 80% 48%) !important;
+  color: white !important;
+}
+
+.slidecontainer label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#demo {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+#myRange {
+  display: none;
 }

@@ -24,28 +24,17 @@
     <title>INVESTIGATING BIGFOOT</title>
 </head>
     <body>
+        <script src="data/Sightings_1.js"></script>
         <div class="slidecontainer">
+            <label>
+                <input type="checkbox" id="activate_year_slider_checkbox" checked>
+                SHOW ALL YEARS
+            </label>
             <input type="range" min="0" value="0" id="myRange">
             <span id="demo"></span>
         </div>
 
-        <script>
-            const years = [2017, 2018, 2020, 2021]; // skip 2019
-
-            const slider = document.getElementById("myRange");
-            const output = document.getElementById("demo");
-
-            // Set the correct max value dynamically
-            slider.max = years.length - 1;
-
-            // Initialize output
-            output.innerHTML = years[slider.value];
-
-            // Update the current slider value
-            slider.oninput = function () {
-                output.innerHTML = years[this.value];
-            };
-        </script>
+        
         <div id="map">
         </div>
         <script src="js/qgis2web_expressions.js"></script>
@@ -60,15 +49,12 @@
         <script src="js/labels.js"></script>
         <script src="js/leaflet.markercluster.js"></script>
         <script src="js/labels.js"></script>
-        <script src="js/timeslider.js"></script>
-        <script src="data/Sightings_1.js"></script>
-        <script src="data/Sightings_1.js"></script>
         <script>
             var map = L.map('map', {
                 zoomControl: false, maxZoom: 28, minZoom: 1
             }).fitBounds([[24.66511084079405, -105.63316361703932], [47.31486305768517, -69.72456869921021]]);
             var hash = new L.Hash(map);
-            map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+            map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a> &middot; <a href="https://www.kaggle.com/datasets/thedevastator/unlocking-mysteries-of-bigfoot-through-sightings">Data Source</a>');
             var autolinker = new Autolinker({ truncate: { length: 30, location: 'smart' } });
             // remove popup's row if "visible-with-data"
             function removeEmptyRowsFromPopupContent(content, feature) {
@@ -170,14 +156,24 @@
             map.createPane('pane_Sightings_1');
             map.getPane('pane_Sightings_1').style.zIndex = 401;
             map.getPane('pane_Sightings_1').style['mix-blend-mode'] = 'normal';
+
             var layer_Sightings_1 = new L.geoJson(json_Sightings_1, {
                 attribution: '',
                 interactive: true,
                 dataVar: 'json_Sightings_1',
                 layerName: 'layer_Sightings_1',
                 pane: 'pane_Sightings_1',
-                onEachFeature: pop_Sightings_1,
+                onEachFeature: function(feature, layer) {
+                                    // Extract and store the year
+                                    const dateStr = feature.properties.DATE;
+                                    if (dateStr) {
+                                        feature.properties.year = parseInt(dateStr.slice(0, 4));
+                                    }
+
+                                    pop_Sightings_1(feature, layer); // keep your popup function
+                                },
                 pointToLayer: function (feature, latlng) {
+
                     var context = {
                         feature: feature,
                         variables: {}
@@ -186,7 +182,7 @@
                 },
             });
             var cluster_Sightings_1 = new L.MarkerClusterGroup({
-                showCoverageOnHover: true,
+                showCoverageOnHover: false,
                 spiderfyDistanceMultiplier: 2
             });
             cluster_Sightings_1.addLayer(layer_Sightings_1);
@@ -194,6 +190,100 @@
             bounds_group.addLayer(layer_Sightings_1);
             cluster_Sightings_1.addTo(map);
             setBounds();
+        </script>
+        <script>
+            var show_all = true;
+            const slider = document.getElementById("myRange");
+            const output = document.getElementById("demo");
+
+            slider.style.display = "none";
+            output.style.display = "none";
+
+            const checkbox = document.getElementById("activate_year_slider_checkbox");
+
+            checkbox.addEventListener("change", function () {
+                show_all = checkbox.checked;
+                
+                if (show_all){
+                    slider.style.display = "none";
+                    output.style.display = "none";
+                }
+                else {
+                    slider.style.display = "inline-block";
+                    output.style.display = "inline-block";
+                }
+                
+                // Initial call to filtering
+                filterByYear(years[slider.value]);
+            });
+
+            
+            const toggleButton = document.getElementById("activate_year_slider");
+
+            // 1. Extract unique sorted years from the GeoJSON data
+            const yearSet = new Set();
+            json_Sightings_1.features.forEach(f => {
+                const dateStr = f.properties.DATE;
+                if (dateStr && dateStr.length >= 4) {
+                    const year = parseInt(dateStr.slice(0, 4));
+                    if (!isNaN(year)) {
+                        yearSet.add(year);
+                    }
+                }
+            });
+
+            const years = Array.from(yearSet).sort((a, b) => a - b);
+
+            // Update max value of the slider
+            slider.max = years.length - 1;
+
+            // Initialize label
+            output.innerHTML = years[slider.value];
+
+
+            // Create full layer once and cache it globally
+            const fullLayer = L.geoJson(json_Sightings_1, {
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, style_Sightings_1_0(feature));
+            },
+            onEachFeature: pop_Sightings_1
+            });
+
+            // Filtering function
+            function filterByYear(selectedYear) {
+                cluster_Sightings_1.clearLayers(); // Remove current markers
+
+                if (show_all) {
+                    // Add cached full layer instead of recreating it
+                    cluster_Sightings_1.addLayer(fullLayer);
+                } else {
+                    // Create filtered layer on-demand
+                    const filteredGeoJson = L.geoJson(json_Sightings_1, {
+                    filter: function (feature) {
+                        const dateStr = feature.properties.DATE;
+                        const year = dateStr ? parseInt(dateStr.slice(0, 4)) : null;
+                        feature.properties.year = year;
+                        return year === selectedYear;
+                    },
+                    pointToLayer: function (feature, latlng) {
+                        return L.marker(latlng, style_Sightings_1_0(feature));
+                    },
+                    onEachFeature: pop_Sightings_1
+                    });
+                    cluster_Sightings_1.addLayer(filteredGeoJson);
+                }
+            }
+
+
+            // Update map when slider moves
+            slider.oninput = function () {
+                const selectedYear = years[this.value];
+                output.innerHTML = selectedYear;
+                filterByYear(selectedYear);
+            };
+
+            // Initial call
+            filterByYear(years[slider.value]);
         </script>
     </body>
 </html>
