@@ -24,19 +24,18 @@
     <title>INVESTIGATING BIGFOOT</title>
 </head>
     <body>
-        <div class="range-slider">
-            <input class="input-range" orient="vertical" type="range" step="0.5" value="5" min="1" max="10">
-            <span class="range-value"></span>
-        </div> 
+        <div class="slidecontainer">
+            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+        </div>
         <script>
-            var range = $('.input-range'),
-            value = $('.range-value');
-            
-            value.html(range.attr('value'));
+            var slider = document.getElementById("myRange");
+            var output = document.getElementById("demo");
+            output.innerHTML = slider.value; // Display the default slider value
 
-            range.on('input', function(){
-                value.html(this.value);
-            }); 
+            // Update the current slider value (each time you drag the slider handle)
+            slider.oninput = function() {
+                output.innerHTML = this.value;
+            }
         </script>
         <div id="map">
         </div>
